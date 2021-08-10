@@ -1,0 +1,7 @@
+import Sofa.Core
+
+def createScene(rootNode):
+        rootNode.addObject("OglGrid", nbSubdiv=10, size=1000)
+        confignode = rootNode.addChild("Config")
+        confignode.addObject('RequiredPlugin', name="SofaPython3", printLog=False)
+        confignode.addObject('OglSceneFrame', style="Arrows", alignment="TopRight")
