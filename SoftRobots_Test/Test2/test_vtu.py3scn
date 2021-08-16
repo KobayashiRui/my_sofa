@@ -4,7 +4,7 @@ import os
 path = os.path.dirname(os.path.abspath(__file__))+'/../'
 import meshio
 
-mesh = meshio.read(path+'chamber_cm.vtu')
+mesh = meshio.read(path+'chamber_cm_v2.vtu')
 
 
 def createScene(rootNode):
