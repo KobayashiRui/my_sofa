@@ -1,0 +1,48 @@
+import Sofa
+
+def createScene(rootNode):
+    #MainHeader(rootNode)
+
+    rootNode.addObject('RequiredPlugin', name="SofaOpenglVisual", printLog=False)
+    rootNode.addObject('VisualStyle', displayFlags='showVisualModels hideBehaviorModels showCollisionModels hideBoundingCollisionModels hideForceFields showInteractionForceFields hideWireframe')
+
+    #rootNode.addObject('FreeMotionAnimationLoop', name="FreeMotionAnimationLoop")
+    rootNode.addObject('DefaultPipeline', name="CollisionPipeline", verbose="0", draw="0", depth="6" )
+    rootNode.addObject('BruteForceBroadPhase')
+    rootNode.addObject('BVHNarrowPhase')
+    #rootNode.addObject('LocalMinDistance', name="Proximity", alarmDistance="0.2", contactDistance="0.09")
+    rootNode.addObject('MinProximityIntersection', name="Proximity", alarmDistance="3",contactDistance="2"  )
+    rootNode.addObject('DefaultContactManager', name="Response",response="default" )
+    #rootNode.addObject('LCPConstraintSolver', maxIt="1000", tolerance="0.001")
+    
+    test_obj = rootNode.addChild('test_obj', gravity="0 0 0")
+
+    test_obj.addObject('EulerImplicitSolver', rayleighStiffness="0.1", rayleighMass="0.1")
+    test_obj.addObject('CGLinearSolver', template="GraphScattered", name="Conjugate Gradient", iterations="25", tolerance="1e-5", threshold="1e-5")
+    test_obj.addObject('SparseGridTopology', name="Embedded Sparse Grid", fileTopology="diamond_tes6.obj", n="8 6 5")
+    test_obj.addObject('MechanicalObject', template="Vec3d", name="Particles", restScale="1", position="0 0 0" )
+    test_obj.addObject('UniformMass', template="Vec3d", name="Mass")
+    test_obj.addObject('HexahedronFEMForceField', template="Vec3", name="FEM", poissonRatio="0.45", youngModulus="2000")
+
+    test_obj.addObject('BoxROI', name='boxROI', box=[-1.5, 0, -4,  0, 0.5, 0], drawBoxes=True, position="@Particles.rest_position")
+    test_obj.addObject('RestShapeSpringsForceField', points='@boxROI.indices', stiffness=1e12)
+
+    test_obj.addObject('BoxROI', name='boxROI2', template="Vec3d", box=[4, 0, -4,  5, 0.5, 0], drawBoxes=True, position="@Particles.rest_position")
+    test_obj.addObject('ConstantForceField', indices='@boxROI2.indices', totalForce =[[0.0,0.0,0.5]])
+
+    visual = test_obj.addChild('visual' , gravity="0 0 0")
+    visual.addObject('MeshObjLoader', name="meshLoader_1", filename="diamond_tes6.obj", handleSeams="1")
+    visual.addObject('OglModel', template="Vec3d", name="Objective", src="@meshLoader_1")
+    visual.addObject('BarycentricMapping', name="Visual Mapping", output="@Objective")
+
+    collision = test_obj.addChild('collision' , gravity="0 0 0")
+    collision.addObject('MeshObjLoader', name="meshLoader1", filename="diamond_tes6.obj")
+    collision.addObject('MeshTopology', name="Mesh", src="@meshLoader1")
+    collision.addObject('MechanicalObject', emplate="Vec3d", name="CollisionObject", scale3d="1 1 1", restScale="1" )
+    collision.addObject('PointCollisionModel')
+    collision.addObject('LineCollisionModel')
+    collision.addObject('TriangleCollisionModel',template="Vec3d")
+    collision.addObject('BarycentricMapping')
+
+    return rootNode
+

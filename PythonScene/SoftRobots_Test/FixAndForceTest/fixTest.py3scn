@@ -1,0 +1,44 @@
+import Sofa
+
+import os
+path = os.path.dirname(os.path.abspath(__file__))+'/../'
+import meshio
+
+mesh = meshio.read(path+'chamber_cm_v2.vtu')
+
+
+def createScene(rootNode):
+
+                rootNode.addObject('RequiredPlugin', pluginName='SoftRobots SofaOpenglVisual SofaSparseSolver SofaPreconditioner')
+                rootNode.addObject('VisualStyle', displayFlags='showVisualModels hideBehaviorModels showCollisionModels hideBoundingCollisionModels hideForceFields showInteractionForceFields hideWireframe')
+
+                rootNode.addObject('FreeMotionAnimationLoop')
+                rootNode.addObject('GenericConstraintSolver', maxIterations=100, tolerance = 0.0000001)
+
+                test_vtu = rootNode.addChild('test_vtu')
+                test_vtu.addObject('EulerImplicitSolver', name='odesolver')
+                test_vtu.addObject('ShewchukPCGLinearSolver', iterations=15, name='linearsolver', tolerance=1e-5, preconditioners='preconditioner', use_precond=True, update_step=1)
+
+                test_vtu.addObject('TetrahedronSetTopologyContainer', name='container', tetrahedra=mesh.cells_dict['tetra'].tolist())
+                test_vtu.addObject('TetrahedronSetTopologyModifier')
+
+                test_vtu.addObject('MechanicalObject', name='tetras', position=mesh.points.tolist())
+                test_vtu.addObject('UniformMass', totalMass=0.5)
+                #test_vtu.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.3,  youngModulus=18000)
+                test_vtu.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.2,  youngModulus=1000)
+
+                test_vtu.addObject('BoxROI', name='boxROI', box=[-5, -2.0, -5,  5, 2.0, 0], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                test_vtu.addObject('RestShapeSpringsForceField', points='@boxROI.indices', stiffness=1e12)
+
+                test_vtu.addObject('SparseLDLSolver', name='preconditioner')
+                test_vtu.addObject('LinearSolverConstraintCorrection', solverName='preconditioner')
+
+                test_vtuVisu = test_vtu.addChild('visu')
+                test_vtuVisu.addObject('TriangleSetTopologyContainer', name='container')
+                test_vtuVisu.addObject('TriangleSetTopologyModifier')
+                test_vtuVisu.addObject('Tetra2TriangleTopologicalMapping', name='Mapping', input="@../container", output="@container")
+
+                test_vtuVisu.addObject('OglModel', color=[0.3, 0.2, 0.2, 0.6])
+                test_vtuVisu.addObject('IdentityMapping')
+
+                return rootNode
