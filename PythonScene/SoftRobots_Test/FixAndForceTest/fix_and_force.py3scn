@@ -4,9 +4,9 @@ import os
 path = os.path.dirname(os.path.abspath(__file__))+'/../'
 import meshio
 
-mesh = meshio.read(path+'diamond.vtu')
+#mesh = meshio.read(path+'diamond.vtu')
 #mesh = meshio.read(path+'hex.vtu')
-#mesh = meshio.read(path+'rectangle.vtu')
+mesh = meshio.read(path+'rectangle.vtu')
 
 
 def createScene(rootNode):
@@ -27,14 +27,19 @@ def createScene(rootNode):
                 test_vtu.addObject('MechanicalObject', name='tetras', position=mesh.points.tolist())
                 test_vtu.addObject('UniformMass', totalMass=0.5)
                 #test_vtu.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.3,  youngModulus=18000)
-                test_vtu.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.2,  youngModulus=1000)
-                #test_vtu.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.2,  youngModulus=25000000)
+                #test_vtu.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.2,  youngModulus=10000) //100MPa 0.1GPa
+                test_vtu.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=0.48,  youngModulus=2000)
 
 
-                test_vtu.addObject('BoxROI', name='boxROI', box=[-3, 0, -0.5,  -0.5, 4, 0.5], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                test_vtu.addObject('BoxROI', name='boxROI', box=[-3, -1, -0.5,  -0.5, 4, 0.5], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
                 test_vtu.addObject('RestShapeSpringsForceField', points='@boxROI.indices', stiffness=1e12)
-                test_vtu.addObject('BoxROI', name='boxROI2', template="Vec3d", box=[4, 0, -0.5,  5, 4, 0.5], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
-                test_vtu.addObject('ConstantForceField', indices='@boxROI2.indices', totalForce =[[0.0,0.5,0.0]])
+
+                #diamond force BOX
+                #test_vtu.addObject('BoxROI', name='boxROI2', template="Vec3d", box=[3.8, 1.5, 0,  4.3, 2.5, 0.5], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+                #hex & rectangle force box
+                test_vtu.addObject('BoxROI', name='boxROI2', template="Vec3d", box=[3.8, 1.2, 0,  4.3, 2.2, 0.5], drawBoxes=True, position="@tetras.rest_position", tetrahedra="@container.tetrahedra")
+
+                test_vtu.addObject('ConstantForceField', indices='@boxROI2.indices', totalForce =[[0.0,-1.0,0.0]], showArrowSize = "3.0")
 
                 test_vtu.addObject('SparseLDLSolver', name='preconditioner')
                 test_vtu.addObject('LinearSolverConstraintCorrection', solverName='preconditioner')
@@ -47,5 +52,4 @@ def createScene(rootNode):
 
                 test_vtuVisu.addObject('OglModel', color=[0.3, 0.2, 0.2, 0.6])
                 test_vtuVisu.addObject('IdentityMapping')
-
                 return rootNode
